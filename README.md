@@ -9,11 +9,11 @@ Since laser cutters create very thin lines, I made the program to draw multiple 
 
 ## Examples ##
 
-I cut multiple boards, using this script. Here are some of them (7x7 calendar, 13x13 flipboard, 19x19 flipboard). The cuts of the 13x13 were too deep so that it cracked on one of the lines. Be careful.
+I cut multiple boards, using this script. Here are some of them (7x7 calendar, 13x13 flipboard, 19x19 flipboard). The cuts of the 13x13 were to deep so that it cracked on one of the lines. Be careful.
 
 ![boards](img/boards.jpg)
 
-The flipboards are taped in the back with 'Tesa Eco Repair' tape from my local hardware store.
+The flipboards are hinged in the back with 'Tesa Eco Repair' tape from my local hardware store.
 
 ![tape](img/tape.jpg)
 
