@@ -10,6 +10,8 @@ DefaultOptions = {
     'border': True,
     # Margin from the outer Lines to the board edge in mm
     'margin': 15,
+    # Add an outside margin so that the browser displays the border correctly
+    'outside_margin': 0.5,
     # Radius of the board corners when rounded corners is activated
     'rounded_corners': 10,
     # Spacing in width and height directions between lines
@@ -18,9 +20,9 @@ DefaultOptions = {
     # linewidth in svg
     'linewidth': 0.15,
     # draw multiple lines which can be used for cleaner lasercuts
-    'multiple_lines': 2,
+    'multlines': 2,
     # spacing between the lines when multiple lines are drawn
-    'multiple_lines_spacing': 0.25,
+    'multlines_spacing': 0.25,
     # diameter of the star circles
     'star_diameter': 4,
     # Unit used everywhere
@@ -46,12 +48,13 @@ class GoBoard(object):
         opt: Dictionary with {
             border: bool,
             margin: float,
+            outside_margin: float,
             rounded_corners: float,
             spacing_horizontal: float,
             spacing_vertical: float,
             linewidth: float,
-            multiple_lines: int,
-            multiple_lines_spacing: float,
+            multlines: int,
+            multlines_spacing: float,
             star_diameter: float,
             unit: str,
             colors: dict{cut_stroke: str, mark_stroke: str, background:str},
@@ -66,11 +69,12 @@ class GoBoard(object):
 
         # If the margin is smaller than the rounded corners we add more to not mess up
         if self.margin < self.rounded_corners:
-            warnings.warn("The margin is smaller than the rounded corners radius, which might result in strange boards. Increase the margin with --margin.")
+            warnings.warn(
+                "The margin is smaller than the rounded corners radius, which might result in strange boards. Increase the margin with --margin.")
 
         # Board width with margin at both sides
         self.width = (self.lines_horizontal - 1) * self.spacing_horizontal + \
-            self.linewidth + self.margin * 2
+            self.multlines_spacing * self.multlines + self.margin * 2 + self.outside_margin * 2
 
         # Specials for half boards
         if self.half_board:
@@ -84,11 +88,11 @@ class GoBoard(object):
 
             # Board height only has a margin at the bottom when there is a half board
             self.height = (self.lines_vertical - 1) * \
-                self.spacing_vertical + self.linewidth + self.margin
+                self.spacing_vertical + self.linewidth + self.margin + self.outside_margin * 2
         else:
             # Board height with margin at the top and bottom
             self.height = (self.lines_vertical - 1) * \
-                self.spacing_vertical + self.linewidth + self.margin * 2
+                self.spacing_vertical + self.linewidth + self.margin * 2 + self.outside_margin * 2
 
         self.drawing = None
 
@@ -108,16 +112,16 @@ class GoBoard(object):
             # the half board is created as full rounded rectangle and then the top is cut of
             # later. This gives a little waste strip but makes the program simpler.
 
-            borderwidth = self.width - self.linewidth
+            borderwidth = self.width - self.linewidth * 2 - self.outside_margin * 2
 
             # Position and height of the border
             if self.half_board:
-                borderpos = (0, -self.rounded_corners)
-                borderheight = self.height - self.linewidth + \
+                borderpos = (0, self.linewidth - self.rounded_corners)
+                borderheight = self.height - self.linewidth * 2. - self.outside_margin * 2+ \
                     self.rounded_corners
             else:
-                borderpos = (0, 0)
-                borderheight = self.height - self.linewidth
+                borderpos = (0., self.linewidth)
+                borderheight = self.height - self.linewidth * 2. - self.outside_margin * 2
 
             border = drawing.rect(borderpos,
                                   size=(borderwidth, borderheight),
@@ -182,13 +186,13 @@ class GoBoard(object):
             end[dir_line] += line_length
 
             # Draw multiple lines next to each other for lasercutting
-            self.draw_multiple_lines(
+            self.draw_multlines(
                 start, end, dir_count)
 
             # Move the start to the next line
             start[dir_count] += spacing
 
-    def draw_multiple_lines(self, start, end, dir_count):
+    def draw_multlines(self, start, end, dir_count):
         """ Draw multiple lines next to each other for better lasercutting.
         The amount of lines and their spacing comes from the options.
 
@@ -197,13 +201,13 @@ class GoBoard(object):
         dir_count is the tupel index direction in which to spread the lines.
         """
 
-        for l in range(self.multiple_lines):
+        for l in range(self.multlines):
             start_o = list(start)
             end_o = list(end)
 
             # Offset the lines from the center line
-            offset = (l - self.multiple_lines / 2.) * \
-                self.multiple_lines_spacing
+            offset = (l - self.multlines / 2.) * \
+                self.multlines_spacing
             start_o[dir_count] += offset
             end_o[dir_count] += offset
 
@@ -217,10 +221,10 @@ class GoBoard(object):
 
         pos is tuple(2) of the center coordinates
         """
-        for l in range(self.multiple_lines):
+        for l in range(self.multlines):
             diameter = self.star_diameter + \
-                (l - self.multiple_lines) * \
-                self.multiple_lines_spacing
+                (l - self.multlines) * \
+                self.multlines_spacing
             star = self.drawing.circle(
                 pos, r=diameter / 2, fill='none', stroke=self.colors['mark_stroke'], stroke_width=self.linewidth)
             self.drawing.add(star)
@@ -243,8 +247,8 @@ class GoBoard(object):
 
             # If it is still on the board after moving, draw it.
             if(point[1] >= 0):
-                center = (start[0] + point[0] * self.spacing_horizontal - self.multiple_lines_spacing / 2,
-                          start[1] + point[1] * self.spacing_vertical - self.multiple_lines_spacing / 2)
+                center = (start[0] + point[0] * self.spacing_horizontal - self.multlines_spacing / 2,
+                          start[1] + point[1] * self.spacing_vertical - self.multlines_spacing / 2)
                 self.draw_starpoint(center)
 
     def write(self, filename):
@@ -253,6 +257,8 @@ class GoBoard(object):
             self.draw()
 
         self.drawing.saveas(filename)
+
+        print("File saved as %s" % (filename))
 
     def tostring(self):
         if self.drawing:
@@ -268,9 +274,11 @@ class GoBoard(object):
         lines = [(2, 0.1), (2, 0.2), (2, 0.3), (2, 0.4), (2, 0.5),
                  (3, 0.1), (3, 0.2), (3, 0.3), (3, 0.4), (3, 0.5)]
 
-        margin = 10
-        line_length = 10
-        spacing = 10
+        print("These are the settings of the test spacings (amount of lines, spacing):\n%s" % (lines))
+
+        margin = 10.
+        line_length = 10.
+        spacing = 10.
         width = line_length + 2 * margin
         height = len(lines) * spacing + margin * 2
 
@@ -298,13 +306,13 @@ class GoBoard(object):
             end = list(start)
             end[dir_line] += line_length
 
-            multiple_lines = lines[i][0]
-            multiple_lines_spacing = lines[i][1]
+            self.multlines = lines[i][0]
+            self.multlines_spacing = lines[i][1]
 
-            self.draw_multiple_lines(
-                start, end, multiple_lines, multiple_lines_spacing, dir_count)
+            self.draw_multlines(
+                start, end, dir_count)
 
-            start[dir_count] += spacing
+            start = (start[0], start[1] + spacing)
 
 
 def main():
@@ -325,9 +333,14 @@ def main():
     parser.add_argument("--no_border", action="store_true",
                         help="Don't draw the border around the board")
     parser.add_argument(
-        "--rounded_corners", default=DefaultOptions['rounded_corners'], help="Radius of rounded corners in mm. 0 for no rounded corners.")
+        "--rounded_corners", default=DefaultOptions['rounded_corners'], help="Radius of rounded corners in mm. 0 for no rounded corners.", type=float)
+    parser.add_argument(
+        "--multlines", default=DefaultOptions['multlines'], help="Draw multiple lines which can be used for cleaner lasercuts", type=int)
+    parser.add_argument(
+        "--multlines_spacing", default=DefaultOptions['multlines_spacing'], help="Spacing between the lines when multiple lines are drawn", type=float)
 
-    parser.add_argument("-m", "--margin", default=DefaultOptions['margin'], help='Margin from the board edge to the lines in mm.')
+    parser.add_argument(
+        "-m", "--margin", default=DefaultOptions['margin'], help='Margin from the board edge to the lines in mm.', type=float)
 
     parse_opt = parser.parse_args()
 
@@ -340,6 +353,8 @@ def main():
     # Add options from arguments
     options['half_board'] = parse_opt.half_board
     options['border'] = not parse_opt.no_border
+    options['multlines'] = parse_opt.multlines
+    options['multlines_spacing'] = (float)(parse_opt.multlines_spacing)
     options['rounded_corners'] = (int)(parse_opt.rounded_corners)
 
     b = GoBoard(options)
