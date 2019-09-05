@@ -2,3 +2,5 @@
 .*sw?
 *.svg
 *.txt
+
+!img/*
