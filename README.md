@@ -1,5 +1,7 @@
 # Goban-svg #
 
+[![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2FAndreasGerken%2Fgoban-svg%2Fbadge&style=flat)](https://actions-badge.atrox.dev/AndreasGerken/goban-svg/goto)
+
 `goban.py` generates an svg file for a [go board](https://en.wikipedia.org/wiki/Go_\(game\)#Boards) or goban.
 The resulting file is suitable to print your own board.
 I used it on wood with a [laser cutter](http://en.wikipedia.org/wiki/Laser_cutting) to create beautiful handmade boards.
