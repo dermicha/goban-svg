@@ -8,6 +8,12 @@ import warnings
 DefaultOptions = {
     # Draw a border (also used for default in arguments)
     'border': True,
+    # Draw only a half board
+    'half_board': False,
+    # Draw the test piece
+    'test': False,
+    # Draw the stone holder overlay (Default: 0 = False)
+    'stone_holder_d': 0,
     # Margin from the outer Lines to the board edge in mm
     'margin': 15,
     # Add an outside margin so that the browser displays the border correctly
@@ -52,6 +58,9 @@ class GoBoard(object):
         """Initializes the object and prepares all dimensions of the board according to the options.
         opt: Dictionary with {
             border: bool,
+            half_board: bool,
+            test: bool,
+            stone_holder_d: int,
             margin: float,
             outside_margin: float,
             rounded_corners: float,
@@ -128,7 +137,7 @@ class GoBoard(object):
         if self.test:
             # This is a test drawing for finding the options for linewidth and line count
             self.draw_test()
-        elif self.stone_holder_diameter:
+        elif self.stone_holder_d:
             # This is the grid overlay with holes to hold the stones in place even with a moving board
             self.draw_stone_holes(start)
         else:
@@ -277,7 +286,7 @@ class GoBoard(object):
                 center = (start[0] + x * self.spacing_horizontal,
                           start[1] + y * self.spacing_vertical)
 
-                hole = self.drawing.circle(center, r=self.stone_holder_diameter / 2, fill='none',
+                hole = self.drawing.circle(center, r=self.stone_holder_d / 2, fill='none',
                                            stroke=self.colors['mark_stroke'], stroke_width=self.linewidth)
                 self.drawing.add(hole)
 
@@ -392,7 +401,7 @@ def main():
     options['multlines_spacing'] = (float)(parse_opt.multlines_spacing)
     options['rounded_corners'] = (int)(parse_opt.rounded_corners)
     options['test'] = (int)(parse_opt.test)
-    options['stone_holder_diameter'] = (int)(parse_opt.stone_holder_d)
+    options['stone_holder_d'] = (int)(parse_opt.stone_holder_d)
 
     b = GoBoard(options)
 
