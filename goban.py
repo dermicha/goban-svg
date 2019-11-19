@@ -52,6 +52,8 @@ sizeOptions =\
 test_lines = [(2, 0.1), (2, 0.2), (2, 0.3), (2, 0.4), (2, 0.5),
               (3, 0.1), (3, 0.2), (3, 0.3), (3, 0.4), (3, 0.5)]
 
+test_holes = [10, 14, 18, 22, 26]
+
 
 class GoBoard(object):
     def __init__(self, opt):
@@ -309,14 +311,23 @@ class GoBoard(object):
         """ This test function creates a test piece to see how the multiple line ammunt and spacing shoult be chosen.
         It can be activated with the --test argument. """
 
-        print("These are the settings of the test spacings (amount of lines, spacing):\n%s" % (
-            test_lines))
-
         margin = 10.
         line_length = 10.
         spacing = 10.
-        width = line_length + 2 * margin
-        height = len(test_lines) * spacing + margin * 2
+
+        if self.test == 'holes':
+            width = max(test_holes) + margin * 2
+            height = sum(test_holes) + (len(test_holes) - 2) * \
+                spacing + margin * 2
+            print("These are the settings of the test holes (hole diameter):\n%s" % (
+                test_holes))
+        elif self.test == 'lines':
+            width = line_length + 2 * margin
+            height = len(test_lines) * spacing + margin * 2
+            print("These are the settings of the test lines (amount of lines, spacing):\n%s" % (
+                test_lines))
+        else:
+            raise Exception("Unknown argument for test. Please use 'holes' or 'lines'.")
 
         drawing = svgwrite.Drawing(size=(
             "%f%s" % (width, self.unit),
@@ -333,22 +344,33 @@ class GoBoard(object):
                               rx=self.rounded_corners, ry=self.rounded_corners)
         drawing.add(border)
 
-        start = (margin, margin)
-
         dir_line = 0
         dir_count = 1
 
-        for i in range(len(test_lines)):
-            end = list(start)
-            end[dir_line] += line_length
+        if self.test == "holes":
+            start = (width / 2, margin)
 
-            self.multlines = test_lines[i][0]
-            self.multlines_spacing = test_lines[i][1]
+            for hole_d in test_holes:
 
-            self.draw_multlines(
-                start, end, dir_count)
+                hole = self.drawing.circle(start, r=hole_d / 2, fill='none',
+                                           stroke=self.colors['mark_stroke'], stroke_width=self.linewidth)
+                self.drawing.add(hole)
 
-            start = (start[0], start[1] + spacing)
+                start = (start[0], start[1] + hole_d + spacing)
+        elif self.test == "lines":
+            start = (margin, margin)
+
+            for i in range(len(test_lines)):
+                end = list(start)
+                end[dir_line] += line_length
+
+                self.multlines = test_lines[i][0]
+                self.multlines_spacing = test_lines[i][1]
+
+                self.draw_multlines(
+                    start, end, dir_count)
+
+                start = (start[0], start[1] + spacing)
 
 
 def main():
@@ -364,9 +386,9 @@ def main():
     parser.add_argument("-o", "--output", default=DefaultOptions['output']['goban'],
                         help="Output filename")
 
-    parser.add_argument("--test", default=False, action="store_true",
+    parser.add_argument("--test", default=False,
                         help="With this option set, instead of a go board a test file will \
-                         be created to find the line spacing for the laser cutter. \
+                         be created to find the options for 'lines' or 'holes'. \
                          (Better explained in README)")
     parser.add_argument("--no_border", action="store_true",
                         help="Don't draw the border around the board")
@@ -400,7 +422,7 @@ def main():
     options['multlines'] = parse_opt.multlines
     options['multlines_spacing'] = (float)(parse_opt.multlines_spacing)
     options['rounded_corners'] = (int)(parse_opt.rounded_corners)
-    options['test'] = (int)(parse_opt.test)
+    options['test'] = parse_opt.test
     options['stone_holder_d'] = (int)(parse_opt.stone_holder_d)
 
     b = GoBoard(options)
