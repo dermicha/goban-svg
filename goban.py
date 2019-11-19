@@ -39,7 +39,8 @@ sizeOptions =\
     {'7': {'lines_horizontal': 7, 'lines_vertical': 7, 'star_points': ((3, 3),)},
      '9': {'lines_horizontal': 9, 'lines_vertical': 9, 'star_points': ((2, 2), (6, 2), (4, 4), (2, 6), (6, 6))},
      '13': {'lines_horizontal': 13, 'lines_vertical': 13, 'star_points': ((3, 3), (9, 3), (6, 6), (3, 9), (9, 9))},
-     '19': {'lines_horizontal': 19, 'lines_vertical': 19, 'star_points': ((3, 3), (9, 3), (15, 3), (3, 9), (9, 9), (15, 9), (3, 15), (9, 15), (15, 15))}}
+     '19': {'lines_horizontal': 19, 'lines_vertical': 19, 'star_points': ((3, 3), (9, 3), (15, 3), (3, 9), (9, 9),
+                                                                          (15, 9), (3, 15), (9, 15), (15, 15))}}
 
 # Tuples of linecount and spacing between them to test
 test_lines = [(2, 0.1), (2, 0.2), (2, 0.3), (2, 0.4), (2, 0.5),
@@ -74,7 +75,8 @@ class GoBoard(object):
         # If the margin is smaller than the rounded corners we add more to not mess up
         if self.margin < self.rounded_corners:
             warnings.warn(
-                "The margin is smaller than the rounded corners radius, which might result in strange boards. Increase the margin with --margin.")
+                "The margin is smaller than the rounded corners radius, which might result \
+                in strange boards. Increase the margin with --margin.")
 
         # Board width with margin at both sides
         self.width = (self.lines_horizontal - 1) * self.spacing_horizontal + \
@@ -298,7 +300,8 @@ class GoBoard(object):
         """ This test function creates a test piece to see how the multiple line ammunt and spacing shoult be chosen.
         It can be activated with the --test argument. """
 
-        print("These are the settings of the test spacings (amount of lines, spacing):\n%s" % (test_lines))
+        print("These are the settings of the test spacings (amount of lines, spacing):\n%s" % (
+            test_lines))
 
         margin = 10.
         line_length = 10.
@@ -353,21 +356,26 @@ def main():
                         help="Output filename")
 
     parser.add_argument("--test", default=False, action="store_true",
-                        help="With this option set, instead of a go board a test file will be created to find the line spacing for the laser cutter")
+                        help="With this option set, instead of a go board a test file will \
+                         be created to find the line spacing for the laser cutter. \
+                         (Better explained in README)")
     parser.add_argument("--no_border", action="store_true",
                         help="Don't draw the border around the board")
     parser.add_argument(
-        "--rounded_corners", default=DefaultOptions['rounded_corners'], help="Radius of rounded corners in mm. 0 for no rounded corners.", type=float)
+        "--rounded_corners", default=DefaultOptions['rounded_corners'], help="Radius of rounded \
+        corners in mm. 0 for no rounded corners.", type=float)
     parser.add_argument(
-        "--multlines", default=DefaultOptions['multlines'], help="Draw multiple lines which can be used for cleaner lasercuts", type=int)
+        "--multlines", default=DefaultOptions['multlines'], help="Draw multiple lines which can \
+        be used for cleaner lasercuts", type=int)
     parser.add_argument(
-        "--multlines_spacing", default=DefaultOptions['multlines_spacing'], help="Spacing between the lines when multiple lines are drawn", type=float)
+        "--multlines_spacing", default=DefaultOptions['multlines_spacing'], help="Spacing between \
+        the lines when multiple lines are drawn", type=float)
 
     parser.add_argument(
         "-m", "--margin", default=DefaultOptions['margin'], help='Margin from the board edge to the lines in mm.', type=float)
 
-    parser.add_argument("--stone_holder_d", default=0, help="With this option you can generate a grid with round holes instead of a normal board. \
-        This can be used as an overlay for a board to hold the stones when playing on a moving table during travels or so. I use this to cut acrylic glass as an overlay. The default is 0, so this mode is deactivated. If you use it, holes with the given diameter are created instead of the goban.")
+    parser.add_argument("--stone_holder_d", default=0, help="With this option you can generate a grid with round holes \
+        instead of a normal board. (Better explained in README)")
 
     parse_opt = parser.parse_args()
 

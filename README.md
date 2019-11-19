@@ -56,7 +56,7 @@ Here's an example:
 | --multlines_spacing | float | Spacing between the lines when multiple lines are drawn                                                       |
 | --rounded_corners | int |Radius of rounded corners in mm. 0 for no rounded corners.                                                         |
 | --no_border       | set | Don't draw the border around the board                                                                            |
-| --test            | set | Create a test file with different multi line spacings and amounts                                                 |
+| --test            | set | Create a test file with different multi line spacings and amounts. (Better explained in README)                   |
 | --half_board      | set | Create only half of the board for flip boards, this can be useful for smaller laser cutter beds.                  |
 | --output, -o      | str |Output file path                                                                                                   |
 | --stone_holder_d  | int | With this option you can generate a grid with round holes instead of a normal board.(Better explained in README)  |
