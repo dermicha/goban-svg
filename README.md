@@ -48,14 +48,27 @@ Here's an example:
   python half_goban.py --size=19 --half_board
 ```
 
-|Argument|Description|
-|-----------------------|-----------------------------------------------------------------------------------------------------|
-| --size, -s        | Size of the go board to generate [7, 9, 13, 19]                                                        |
-| --margin, -m      | Margin from the board edge to the lines in mm                                                         |
-| --multlines  |Draw multiple lines which can be used for cleaner lasercuts|
-| --multlines_spacing | Spacing between the lines when multiple lines are drawn                                                         |
-| --rounded_corners | Radius of rounded corners in mm. 0 for no rounded corners.                                             |
-| --no_border       | [Set] Don't draw the border around the board                                                           |
-| --test            | [Set] Create a test file with different multi line spacings and amounts                               |
-| --half_board      | [Set] Create only half of the board for flip boards, this can be useful for smaller laser cutter beds. |
-| --output, -o      | Output file path        
+|Argument|Type|Description|
+|-----------------------|-----|---------------------------------------------------------------------------------------------------------------|
+| --size, -s        | str | Size of the go board to generate [7, 9, 13, 19]                                                                   |
+| --margin, -m      | int | Margin from the board edge to the lines in mm                                                                     |
+| --multlines  | int | Draw multiple lines which can be used for cleaner lasercuts                                                            |
+| --multlines_spacing | float | Spacing between the lines when multiple lines are drawn                                                       |
+| --rounded_corners | int |Radius of rounded corners in mm. 0 for no rounded corners.                                                         |
+| --no_border       | set | Don't draw the border around the board                                                                            |
+| --test            | set | Create a test file with different multi line spacings and amounts                                                 |
+| --half_board      | set | Create only half of the board for flip boards, this can be useful for smaller laser cutter beds.                  |
+| --output, -o      | str |Output file path                                                                                                   |
+| --stone_holder_d  | int | With this option you can generate a grid with round holes instead of a normal board.(Better explained in README)  |
+
+### Special modes
+
+#### --test [Set]
+In this mode, the board is not drawn according to the other arguments. Instead a small test file is created with different line spacings and different amounts of different lines. The amount of lines and their spacing is printed in the console for reference. The settings are in the global variable test_lines (around line 45).
+
+#### --stone_holder_d [int]
+With this option you can generate a grid with round holes instead of a normal board.
+This can be used as an overlay for a board to hold the stones when playing on a moving table during travels or so.
+I use this to cut acrylic glass as an overlay.
+The default is 0, so this mode is deactivated.
+If you use it, holes with the given diameter are created instead of the goban.

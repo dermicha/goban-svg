@@ -36,10 +36,14 @@ DefaultOptions = {
 }
 
 sizeOptions =\
-    {'7': {'lines_horizontal': 7, 'lines_vertical': 7, 'star_points': ((2, 2), (4, 2), (2, 4), (4, 4))},
+    {'7': {'lines_horizontal': 7, 'lines_vertical': 7, 'star_points': ((3, 3),)},
      '9': {'lines_horizontal': 9, 'lines_vertical': 9, 'star_points': ((2, 2), (6, 2), (4, 4), (2, 6), (6, 6))},
      '13': {'lines_horizontal': 13, 'lines_vertical': 13, 'star_points': ((3, 3), (9, 3), (6, 6), (3, 9), (9, 9))},
      '19': {'lines_horizontal': 19, 'lines_vertical': 19, 'star_points': ((3, 3), (9, 3), (15, 3), (3, 9), (9, 9), (15, 9), (3, 15), (9, 15), (15, 15))}}
+
+# Tuples of linecount and spacing between them to test
+test_lines = [(2, 0.1), (2, 0.2), (2, 0.3), (2, 0.4), (2, 0.5),
+              (3, 0.1), (3, 0.2), (3, 0.3), (3, 0.4), (3, 0.5)]
 
 
 class GoBoard(object):
@@ -74,7 +78,8 @@ class GoBoard(object):
 
         # Board width with margin at both sides
         self.width = (self.lines_horizontal - 1) * self.spacing_horizontal + \
-            self.multlines_spacing * self.multlines + self.margin * 2 + self.outside_margin * 2
+            self.multlines_spacing * self.multlines + \
+            self.margin * 2 + self.outside_margin * 2
 
         # Specials for half boards
         if self.half_board:
@@ -89,10 +94,17 @@ class GoBoard(object):
             # Board height only has a margin at the bottom when there is a half board
             self.height = (self.lines_vertical - 1) * \
                 self.spacing_vertical + self.linewidth + self.margin + self.outside_margin * 2
+
+            # Find the top left point where to start the lines
+            self.start = (self.margin, 0)
         else:
             # Board height with margin at the top and bottom
             self.height = (self.lines_vertical - 1) * \
-                self.spacing_vertical + self.linewidth + self.margin * 2 + self.outside_margin * 2
+                self.spacing_vertical + self.linewidth + \
+                self.margin * 2 + self.outside_margin * 2
+
+            # Find the top left point where to start the lines
+            self.start = (self.margin, self.margin)
 
         self.drawing = None
 
@@ -106,49 +118,55 @@ class GoBoard(object):
             viewBox=('0 0 %d %d' % (self.width, self.height)))
         self.drawing = drawing
 
+        start = self.start
+
         if self.border:
-            # Create the edges of the board.
-            # Since it is very easy to create full rectangles with rounded corner,
-            # the half board is created as full rounded rectangle and then the top is cut of
-            # later. This gives a little waste strip but makes the program simpler.
+            self.draw_border()
 
-            borderwidth = self.width - self.linewidth * 2 - self.outside_margin * 2
-
-            # Position and height of the border
-            if self.half_board:
-                borderpos = (0, self.linewidth - self.rounded_corners)
-                borderheight = self.height - self.linewidth * 2. - self.outside_margin * 2+ \
-                    self.rounded_corners
-            else:
-                borderpos = (0., self.linewidth)
-                borderheight = self.height - self.linewidth * 2. - self.outside_margin * 2
-
-            border = drawing.rect(borderpos,
-                                  size=(borderwidth, borderheight),
-                                  stroke=self.colors['cut_stroke'],
-                                  stroke_width=self.linewidth,
-                                  fill=self.colors['background'],
-                                  rx=self.rounded_corners,
-                                  ry=self.rounded_corners)
-            drawing.add(border)
-
-            # If the board is just half, cut of the top part with the rounded corners
-            if self.half_board:
-                top_cut = self.drawing.line(
-                    (0, 0), (self.width, 0), stroke=self.colors['cut_stroke'],
-                    stroke_width=self.linewidth)
-                self.drawing.add(top_cut)
-
-        # Find the top left point where to start the lines
-        if self.half_board:
-            start = (self.margin, 0)
+        if self.test:
+            # This is a test drawing for finding the options for linewidth and line count
+            self.draw_test()
+        elif self.stone_holder_diameter:
+            # This is the grid overlay with holes to hold the stones in place even with a moving board
+            self.draw_stone_holes(start)
         else:
-            start = (self.margin, self.margin)
+            # Draw all lines & stars
+            self.draw_lines(start, 'vertical')
+            self.draw_lines(start, 'horizontal')
+            self.draw_starpoints(start)
 
-        # Draw all lines & stars
-        self.draw_lines(start, 'vertical')
-        self.draw_lines(start, 'horizontal')
-        self.draw_starpoints(start)
+    def draw_border(self):
+        # Create the edges of the board.
+        # Since it is very easy to create full rectangles with rounded corner,
+        # the half board is created as full rounded rectangle and then the top is cut of
+        # later. This gives a little waste strip but makes the program simpler.
+
+        borderwidth = self.width - self.linewidth * 2 - self.outside_margin * 2
+
+        # Position and height of the border
+        if self.half_board:
+            borderpos = (0, self.linewidth - self.rounded_corners)
+            borderheight = self.height - self.linewidth * 2. - self.outside_margin * 2 + \
+                self.rounded_corners
+        else:
+            borderpos = (0., self.linewidth)
+            borderheight = self.height - self.linewidth * 2. - self.outside_margin * 2
+
+        border = self.drawing.rect(borderpos,
+                                   size=(borderwidth, borderheight),
+                                   stroke=self.colors['cut_stroke'],
+                                   stroke_width=self.linewidth,
+                                   fill=self.colors['background'],
+                                   rx=self.rounded_corners,
+                                   ry=self.rounded_corners)
+        self.drawing.add(border)
+
+        # If the board is just half, cut of the top part with the rounded corners
+        if self.half_board:
+            top_cut = self.drawing.line(
+                (0, 0), (self.width, 0), stroke=self.colors['cut_stroke'],
+                stroke_width=self.linewidth)
+            self.drawing.add(top_cut)
 
     def draw_lines(self, start, direction):
         """Draws a bunch of lines, this function is used for vertical and horizontal lines
@@ -215,20 +233,6 @@ class GoBoard(object):
                 start=start_o, end=end_o, stroke=self.colors['mark_stroke'], stroke_width=self.linewidth)
             self.drawing.add(line)
 
-    def draw_starpoint(self, pos):
-        """ Draw one starpoint consisting of multiple lines next to each other.
-        The amount of lines and their spacing comes from the options.
-
-        pos is tuple(2) of the center coordinates
-        """
-        for l in range(self.multlines):
-            diameter = self.star_diameter + \
-                (l - self.multlines) * \
-                self.multlines_spacing
-            star = self.drawing.circle(
-                pos, r=diameter / 2, fill='none', stroke=self.colors['mark_stroke'], stroke_width=self.linewidth)
-            self.drawing.add(star)
-
     def draw_starpoints(self, start):
         """Draws all star points
 
@@ -251,6 +255,30 @@ class GoBoard(object):
                           start[1] + point[1] * self.spacing_vertical - self.multlines_spacing / 2)
                 self.draw_starpoint(center)
 
+    def draw_starpoint(self, pos):
+        """ Draw one starpoint consisting of multiple lines next to each other.
+        The amount of lines and their spacing comes from the options.
+
+        pos is tuple(2) of the center coordinates
+        """
+        for l in range(self.multlines):
+            diameter = self.star_diameter + \
+                (l - self.multlines) * \
+                self.multlines_spacing
+            star = self.drawing.circle(
+                pos, r=diameter / 2, fill='none', stroke=self.colors['mark_stroke'], stroke_width=self.linewidth)
+            self.drawing.add(star)
+
+    def draw_stone_holes(self, start):
+        for x in range(self.lines_horizontal):
+            for y in range(self.lines_vertical):
+                center = (start[0] + x * self.spacing_horizontal,
+                          start[1] + y * self.spacing_vertical)
+
+                hole = self.drawing.circle(center, r=self.stone_holder_diameter / 2, fill='none',
+                                           stroke=self.colors['mark_stroke'], stroke_width=self.linewidth)
+                self.drawing.add(hole)
+
     def write(self, filename):
         """writes the svg rendering into a file"""
         if not self.drawing:
@@ -270,17 +298,13 @@ class GoBoard(object):
         """ This test function creates a test piece to see how the multiple line ammunt and spacing shoult be chosen.
         It can be activated with the --test argument. """
 
-        # Tuples of linecount and spacing between them to test
-        lines = [(2, 0.1), (2, 0.2), (2, 0.3), (2, 0.4), (2, 0.5),
-                 (3, 0.1), (3, 0.2), (3, 0.3), (3, 0.4), (3, 0.5)]
-
-        print("These are the settings of the test spacings (amount of lines, spacing):\n%s" % (lines))
+        print("These are the settings of the test spacings (amount of lines, spacing):\n%s" % (test_lines))
 
         margin = 10.
         line_length = 10.
         spacing = 10.
         width = line_length + 2 * margin
-        height = len(lines) * spacing + margin * 2
+        height = len(test_lines) * spacing + margin * 2
 
         drawing = svgwrite.Drawing(size=(
             "%f%s" % (width, self.unit),
@@ -302,12 +326,12 @@ class GoBoard(object):
         dir_line = 0
         dir_count = 1
 
-        for i in range(len(lines)):
+        for i in range(len(test_lines)):
             end = list(start)
             end[dir_line] += line_length
 
-            self.multlines = lines[i][0]
-            self.multlines_spacing = lines[i][1]
+            self.multlines = test_lines[i][0]
+            self.multlines_spacing = test_lines[i][1]
 
             self.draw_multlines(
                 start, end, dir_count)
@@ -342,6 +366,9 @@ def main():
     parser.add_argument(
         "-m", "--margin", default=DefaultOptions['margin'], help='Margin from the board edge to the lines in mm.', type=float)
 
+    parser.add_argument("--stone_holder_d", default=0, help="With this option you can generate a grid with round holes instead of a normal board. \
+        This can be used as an overlay for a board to hold the stones when playing on a moving table during travels or so. I use this to cut acrylic glass as an overlay. The default is 0, so this mode is deactivated. If you use it, holes with the given diameter are created instead of the goban.")
+
     parse_opt = parser.parse_args()
 
     # Get the options for the chosen size
@@ -356,13 +383,12 @@ def main():
     options['multlines'] = parse_opt.multlines
     options['multlines_spacing'] = (float)(parse_opt.multlines_spacing)
     options['rounded_corners'] = (int)(parse_opt.rounded_corners)
+    options['test'] = (int)(parse_opt.test)
+    options['stone_holder_diameter'] = (int)(parse_opt.stone_holder_d)
 
     b = GoBoard(options)
 
-    if parse_opt.test:
-        b.draw_test()
-    else:
-        b.draw()
+    b.draw()
 
     if parse_opt.test and parse_opt.output == DefaultOptions['output']['goban']:
         parse_opt.output = DefaultOptions['output']['test']
