@@ -417,6 +417,7 @@ def main():
     options.update(DefaultOptions)
 
     # Add options from arguments
+    options['margin'] = (int)(parse_opt.margin)
     options['half_board'] = parse_opt.half_board
     options['border'] = not parse_opt.no_border
     options['multlines'] = parse_opt.multlines
