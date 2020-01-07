@@ -47,7 +47,7 @@ There are a few command line arguments to modify the board.
 Here's an example:
 
 ```bash
-  python half_goban.py --size=19 --half_board
+  python goban.py --size=19 --half_board
 ```
 
 |Argument|Type|Description|
